@@ -1,0 +1,1 @@
+deno run --allow-run ./src/start.ts
