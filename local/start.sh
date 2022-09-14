@@ -1,1 +1,1 @@
-deno run --allow-run ./src/start.ts
+deno run --allow-run --unstable ./src/start.ts
