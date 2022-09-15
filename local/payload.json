@@ -1,9 +1,0 @@
-{
-  "pathParameters": {
-    "id": "test"
-  },
-  "queryStringParameters": {},
-  "body": {
-    "id": "test"
-  }
-}

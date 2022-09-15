@@ -1,3 +1,6 @@
 .deno_dir
 .serverless
+
 deno-lambda-layer
+output.json
+payload.json
