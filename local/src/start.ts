@@ -36,6 +36,7 @@ const start = async () => {
     if (killProcess) break;
   }
 
+  await killEndpoint();
   await toggleDynamo(false).status();
 };
 
