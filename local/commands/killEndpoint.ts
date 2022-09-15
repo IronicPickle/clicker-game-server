@@ -1,5 +1,4 @@
-import * as path from "https://deno.land/std@0.57.0/path/mod.ts";
-import { dirname } from "../src/constants.ts";
+import { basePath } from "../src/constants.ts";
 
 export default async () => {
   const output = await Deno.run({
@@ -11,7 +10,7 @@ export default async () => {
       "--filter",
       "ancestor=lambci/lambda:provided.al2",
     ],
-    cwd: path.join(dirname, "../../"),
+    cwd: basePath,
     stdout: "piped",
     stderr: "piped",
   }).output();
@@ -21,6 +20,6 @@ export default async () => {
   if (!container) return;
   await Deno.run({
     cmd: ["docker", "stop", container],
-    cwd: path.join(dirname, "../../"),
+    cwd: basePath,
   }).status();
 };

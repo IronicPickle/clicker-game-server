@@ -1,5 +1,4 @@
-import * as path from "https://deno.land/std@0.57.0/path/mod.ts";
-import { dirname } from "../src/constants.ts";
+import { basePath, layerPath, srcPath } from "../src/constants.ts";
 
 export default (endpoint: string) =>
   Deno.run({
@@ -22,21 +21,17 @@ export default (endpoint: string) =>
       "DOCKER_LAMBDA_STAY_OPEN=1",
       "-p",
       "9001:9001",
+      "--add-host",
+      "host.docker.internal:host-gateway",
 
       "--mount",
-      `type=bind,source=${path.join(
-        dirname,
-        "../../src"
-      )},destination=/var/task,readonly`,
+      `type=bind,source=${srcPath},destination=/var/task,readonly`,
 
       "--mount",
-      `type=bind,source=${path.join(
-        dirname,
-        "../deno-lambda-layer"
-      )},destination=/opt,readonly`,
+      `type=bind,source=${layerPath},destination=/opt,readonly`,
 
       "lambci/lambda:provided.al2",
       `api/${endpoint}`,
     ],
-    cwd: path.join(dirname, "../../"),
+    cwd: basePath,
   });

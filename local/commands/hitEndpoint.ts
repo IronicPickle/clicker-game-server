@@ -1,7 +1,6 @@
-import * as path from "https://deno.land/std@0.57.0/path/mod.ts";
-import { dirname } from "../src/constants.ts";
+import { basePath, outputPath } from "../src/constants.ts";
 
-export default (endpoint: string, data: any) =>
+export default (data: any) =>
   Deno.run({
     cmd: [
       "aws",
@@ -15,10 +14,10 @@ export default (endpoint: string, data: any) =>
       "--region",
       "local",
       "--function-name",
-      endpoint,
+      "null",
       "--payload",
       JSON.stringify(data),
-      path.join(dirname, "../output.json"),
+      outputPath,
     ],
-    cwd: path.join(dirname, "../../"),
+    cwd: basePath,
   });
