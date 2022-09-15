@@ -12,6 +12,8 @@ export default (endpoint: string, data: any) =>
       "--no-sign-request",
       "--cli-binary-format",
       "raw-in-base64-out",
+      "--region",
+      "local",
       "--function-name",
       endpoint,
       "--payload",

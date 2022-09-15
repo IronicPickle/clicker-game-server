@@ -8,6 +8,10 @@ const start = async () => {
   let payload = null;
 
   try {
+    await Deno.remove(path.join(dirname, "../output.json"));
+  } catch (_err) {}
+
+  try {
     payload = JSON.parse(
       await Deno.readTextFile(path.join(dirname, "../payload.json"))
     );

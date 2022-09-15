@@ -1,1 +1,1 @@
-deno run --allow-run --allow-read ./src/hit.ts
+deno run --allow-run --allow-read --allow-write ./src/hit.ts
