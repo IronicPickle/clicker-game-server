@@ -5,7 +5,7 @@ export function ok(body: unknown, statusCode = 200) {
   };
 }
 
-export function error(message: string, statusCode = 500) {
+export function error(message: any, statusCode = 500) {
   return ok({ message: message }, statusCode);
 }
 
@@ -16,3 +16,9 @@ export const parseBody = <B>(body?: string): B | null => {
   } catch (_err) {}
   return parsedBody;
 };
+
+export const generateUuid = crypto.randomUUID;
+
+export function enumContains<T>(enumType: any, value: T): value is T {
+  return Object.values(enumType).includes(value);
+}

@@ -2,6 +2,6 @@
 .serverless
 
 deno-lambda-layer
-output.json
+response.json
 payload.json
 docker
