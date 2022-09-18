@@ -1,4 +1,4 @@
-service: sessions-service
+service: session-service
 frameworkVersion: ">=3.22.0"
 
 provider:
@@ -23,16 +23,26 @@ package:
     - package-lock.json
 
 functions:
-  getSessions:
-    handler: src/api/sessions.get
+  getSession:
+    handler: src/api/session.get
     layers:
       - !GetAtt Deno.Outputs.LayerArn
     memorySize: 128
     description: Get session by id
     events:
       - http:
-          path: sessions/{id}
+          path: session/{id}
           method: get
+  createSession:
+    handler: src/api/session.create
+    layers:
+      - !GetAtt Deno.Outputs.LayerArn
+    memorySize: 128
+    description: Create a session
+    events:
+      - http:
+          path: session/create
+          method: put
 
 resources:
   Transform: AWS::Serverless-2016-10-31
@@ -60,10 +70,7 @@ resources:
 
 plugins:
   - serverless-scriptable-plugin
-  - serverless-offline
 
 custom:
   scriptHooks:
     before:package:createDeploymentArtifacts: bash ./scripts/serverless/before-package-createDeploymentArtifacts.sh
-  serverless-offline:
-    useDocker: true
