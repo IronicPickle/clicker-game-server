@@ -1,7 +1,19 @@
 import hitEndpoint from "../commands/hitEndpoint.ts";
 import { outputPath, payloadPath } from "./constants.ts";
+import endpoints from "./endpoints.ts";
 
 const start = async () => {
+  const endpoint = prompt("- Endpoint name\n>");
+  const func = prompt("- Function name\n>");
+  if (!endpoint || !func) return;
+
+  const port = endpoints[endpoint][func];
+  if (port == null) return;
+
+  console.log("\n");
+
+  console.clear();
+
   let payload = null;
 
   try {
@@ -15,7 +27,7 @@ const start = async () => {
     if (string) payload = JSON.parse(string);
   }
 
-  await hitEndpoint(payload).status();
+  await hitEndpoint(payload, endpoint, func, port).status();
 
   const { statusCode, body } = JSON.parse(await Deno.readTextFile(outputPath));
 
@@ -23,7 +35,7 @@ const start = async () => {
     "response.json",
     `\nStatus: ${statusCode}`,
     "\nBody:",
-    JSON.parse(body)
+    body ? JSON.parse(body) : body
   );
 };
 

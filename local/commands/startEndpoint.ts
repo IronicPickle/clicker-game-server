@@ -1,6 +1,6 @@
-import { basePath, layerPath, srcPath } from "../src/constants.ts";
+import { basePath, layerPath, rootPath } from "../src/constants.ts";
 
-export default (endpoint: string) =>
+export default (endpoint: string, func: string, port: number) =>
   Deno.run({
     cmd: [
       "docker",
@@ -20,18 +20,21 @@ export default (endpoint: string) =>
       "-e",
       "DOCKER_LAMBDA_STAY_OPEN=1",
       "-p",
-      "9001:9001",
+      `${port}:9001`,
       "--add-host",
       "host.docker.internal:host-gateway",
 
+      "--name",
+      `${endpoint}.${func}`,
+
       "--mount",
-      `type=bind,source=${srcPath},destination=/var/task,readonly`,
+      `type=bind,source=${rootPath},destination=/var/task,readonly`,
 
       "--mount",
       `type=bind,source=${layerPath},destination=/opt,readonly`,
 
       "lambci/lambda:provided.al2",
-      `api/${endpoint}`,
+      `clicker-game-server/src/api/${endpoint}.${func}`,
     ],
     cwd: basePath,
   });
