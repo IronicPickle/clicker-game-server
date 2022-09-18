@@ -76,8 +76,9 @@ const start = async () => {
   log("\n> Killing Endpoints");
   await Promise.all(getKillers());
 
-  log("\n> Stopping DynamoDB");
-  await toggleDynamo(false).status();
+  // Deno.run({
+  //   cmd: ["reset"],
+  // });
 
   Deno.exit();
 };

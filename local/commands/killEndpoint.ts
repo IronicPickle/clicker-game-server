@@ -2,7 +2,7 @@ import { basePath } from "../src/constants.ts";
 
 export default async (endpoint: string, func: string) => {
   const output = await Deno.run({
-    cmd: ["docker", "ps", "-a", "-q", "--filter", `name=${endpoint}.${func}`],
+    cmd: ["docker", "ps", "-a", "-q", "--filter", `name=^${endpoint}.${func}$`],
     cwd: basePath,
     stdout: "piped",
     stderr: "piped",
