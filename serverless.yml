@@ -14,17 +14,15 @@ provider:
         - dynamodb:GetItem
         - dynamodb:PutItem
       Resource:
-        - Fn::GetAtt: [candidatesTable, Arn]
+        - Fn::GetAtt: [sessionsTable, Arn]
 
 package:
-  exclude:
-    - .deno_dir/gen/file
-    - node_modules
-    - package-lock.json
+  artifact:
+    - .serverless/session-service.zip
 
 functions:
   getSession:
-    handler: src/api/session.get
+    handler: clicker-game-server/src/api/session.get
     layers:
       - !GetAtt Deno.Outputs.LayerArn
     memorySize: 128
@@ -34,7 +32,7 @@ functions:
           path: session/{id}
           method: get
   createSession:
-    handler: src/api/session.create
+    handler: clicker-game-server/src/api/session.create
     layers:
       - !GetAtt Deno.Outputs.LayerArn
     memorySize: 128
@@ -54,7 +52,7 @@ resources:
           ApplicationId: arn:aws:serverlessrepo:us-east-1:390065572566:applications/deno
           SemanticVersion: 1.25.2
 
-    candidatesTable:
+    sessionsTable:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: sessions
@@ -73,4 +71,4 @@ plugins:
 
 custom:
   scriptHooks:
-    before:package:createDeploymentArtifacts: bash ./scripts/serverless/before-package-createDeploymentArtifacts.sh
+    before:package:createDeploymentArtifacts: bash ./scripts/serverless/package.sh
