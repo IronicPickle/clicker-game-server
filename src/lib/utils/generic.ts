@@ -1,8 +1,13 @@
 import Validator from "../../../../clicker-game-shared/utils/Validator.ts";
+import { APIGatewayProxyEventV2 } from "https://deno.land/x/lambda@1.25.2/mod.ts";
 
 export function ok(body: unknown = { message: "success" }, statusCode = 200) {
   return {
     statusCode,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Credentials": true,
+    },
     body: JSON.stringify(body),
   };
 }
@@ -11,12 +16,25 @@ export function error(message: any, statusCode = 500) {
   return ok({ message: message }, statusCode);
 }
 
-export const parseBody = <B>(body?: string): B | null => {
+export const parseParams = <P>({
+  pathParameters,
+}: APIGatewayProxyEventV2): Partial<P> => {
+  return (pathParameters as any) ?? {};
+};
+
+export const parseQuery = <P>({
+  queryStringParameters,
+}: APIGatewayProxyEventV2): Partial<P> => {
+  return (queryStringParameters as any) ?? {};
+};
+
+export const parseBody = <B>({ body }: APIGatewayProxyEventV2): Partial<B> => {
   if (typeof body === "object") return body;
-  let parsedBody = null;
+  let parsedBody = {};
   try {
     if (body) parsedBody = JSON.parse(body);
   } catch (_err) {}
+
   return parsedBody;
 };
 

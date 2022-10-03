@@ -31,6 +31,7 @@ functions:
       - http:
           path: session/{id}
           method: get
+          cors: true
   createSession:
     handler: clicker-game-server/src/api/session.create
     layers:
@@ -41,6 +42,30 @@ functions:
       - http:
           path: session/create
           method: put
+          cors: true
+
+  getGameData:
+    handler: clicker-game-server/src/api/gameData.get
+    layers:
+      - !GetAtt Deno.Outputs.LayerArn
+    memorySize: 128
+    description: Get game data by id or session id
+    events:
+      - http:
+          path: gameData
+          method: get
+          cors: true
+  createGameData:
+    handler: clicker-game-server/src/api/session.create
+    layers:
+      - !GetAtt Deno.Outputs.LayerArn
+    memorySize: 128
+    description: Associate game data with a session
+    events:
+      - http:
+          path: gameData/create
+          method: put
+          cors: true
 
 resources:
   Transform: AWS::Serverless-2016-10-31
@@ -56,6 +81,20 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: sessions
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+    gameDataTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: gameData
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S

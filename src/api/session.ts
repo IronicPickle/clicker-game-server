@@ -2,45 +2,49 @@ import {
   APIGatewayProxyEventV2,
   Context,
 } from "https://deno.land/x/lambda@1.25.2/mod.ts";
-import { Doc } from "https://denopkg.com/chiefbiiko/dynamodb@master/mod.ts";
+import {
+  CreateSessionReq,
+  GetSessionReq,
+} from "../../../clicker-game-shared/ts/api/session.ts";
 import sessionValidators from "../../../clicker-game-shared/validators/sessionValidators.ts";
 
-import { dyno } from "../dynamo.ts";
-import { error, ok, parseBody, parseValidators } from "../lib/utils/generic.ts";
+import DynoTable from "../lib/utils/DynoTable.ts";
+import {
+  error,
+  ok,
+  parseBody,
+  parseParams,
+  parseValidators,
+} from "../lib/utils/generic.ts";
 
-export const TableName = "sessions";
+const Sessions = new DynoTable("sessions");
 
 export async function get(event: APIGatewayProxyEventV2, _context: Context) {
-  const { id } = event.pathParameters ?? {};
+  const params = parseParams<GetSessionReq>(event);
 
-  const validators = sessionValidators.get(event.pathParameters);
+  const validators = sessionValidators.get(params);
   const errors = parseValidators(validators);
+
+  const { id } = params;
 
   if (errors.failed || !id) return error(errors);
 
-  let result: Doc;
-  try {
-    result = await dyno.getItem({
-      TableName,
-      Key: {
-        id,
-      },
-    });
-  } catch (err) {
-    return error(`Could not fetch item\n${err}`);
-  }
+  const { err, data } = await Sessions.getItemById(id);
+  if (err || !data) return error(`Could not fetch item. ${err}`);
+  const { Item } = data;
 
-  if (!result.Item) return error(`Not Found: ${id}`, 404);
+  if (!Item) return error(`Not Found: ${id}`, 404);
 
-  return ok(result.Item);
+  return ok(Item);
 }
 
 export async function create(event: APIGatewayProxyEventV2, _context: Context) {
-  const body = parseBody<{ displayName: string }>(event.body);
-  const { displayName } = body ?? {};
+  const body = parseBody<CreateSessionReq>(event);
 
   const validators = sessionValidators.create(body);
   const errors = parseValidators(validators);
+
+  const { displayName } = body;
 
   if (errors.failed || !displayName) return error(errors);
 
@@ -49,14 +53,8 @@ export async function create(event: APIGatewayProxyEventV2, _context: Context) {
     displayName: displayName,
   };
 
-  try {
-    await dyno.putItem({
-      TableName,
-      Item,
-    });
-  } catch (err) {
-    return error(`Could not put item\n${err}`);
-  }
+  const { err } = await Sessions.putItem(Item);
+  if (err) return error(`Could not put item. ${err}`);
 
   return ok(Item);
 }
@@ -65,16 +63,11 @@ export async function getAll(
   _event: APIGatewayProxyEventV2,
   _context: Context
 ) {
-  let result: Doc;
-  try {
-    result = await dyno.scan({
-      TableName,
-    });
-  } catch (err) {
-    return error(`Could not fetch items\n${err}`);
-  }
+  const { err, data } = await Sessions.scan();
+  if (err || !data) return error(`Could not fetch items. ${err}`);
+  const { Items } = data;
 
-  if (!result.Items) return error(`Not Found`, 404);
+  if (!Items) return error(`Not Found`, 404);
 
-  return ok(result.Items);
+  return ok(Items);
 }
