@@ -1,11 +1,9 @@
 import toggleDynamo from "../commands/toggleDynamo.ts";
 import startEndpoint from "../commands/startEndpoint.ts";
-import { apiPath, libPath, sharedPath } from "./constants.ts";
-import { readKeypress } from "https://deno.land/x/keypress@0.0.8/mod.ts";
-import * as path from "https://deno.land/std@0.57.0/path/mod.ts";
-
+import { apiPath, libPath, sharedPath, srcPath } from "./constants.ts";
 import endpoints from "./endpoints.ts";
 import killEndpoint from "../commands/killEndpoint.ts";
+import { path, readKeypress } from "./deps.ts";
 
 const log = (...content: any[]) => console.log(...content, "\r");
 
@@ -15,6 +13,7 @@ const startAndWatch = async (endpoint: string, func: string, port: number) => {
   const watcher = Deno.watchFs([
     sharedPath,
     libPath,
+    path.join(srcPath, "deps.ts"),
     path.join(apiPath, `${endpoint}.ts`),
   ]);
 

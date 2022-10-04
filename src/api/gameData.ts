@@ -1,14 +1,9 @@
 import {
-  APIGatewayProxyEventV2,
-  Context,
-} from "https://deno.land/x/lambda@1.25.2/mod.ts";
-import { Doc } from "https://denopkg.com/chiefbiiko/dynamodb@master/mod.ts";
-import {
   CreateGameDataReq,
   GetGameDataReq,
 } from "../../../clicker-game-shared/ts/api/gameData.ts";
 import gameDataValidators from "../../../clicker-game-shared/validators/gameDataValidators.ts";
-
+import { APIGatewayProxyEventV2, Context, dayjs, Doc } from "../deps.ts";
 import DynoTable from "../lib/utils/DynoTable.ts";
 import {
   error,
@@ -20,6 +15,17 @@ import {
 
 const GameData = new DynoTable("gameData");
 const Sessions = new DynoTable("sessions");
+
+const getValidGameData = async (sessionId: string, date: any = dayjs()) =>
+  await GameData.query({
+    IndexName: "sessionIndex",
+    ExpressionAttributeValues: {
+      ":sessionId": sessionId,
+      ":date": date.format(),
+    },
+    KeyConditionExpression: "sessionId = :sessionId",
+    FilterExpression: ":date between validFrom and validTo",
+  });
 
 export async function get(event: APIGatewayProxyEventV2, _context: Context) {
   const params = parseQuery<GetGameDataReq>(event);
@@ -38,13 +44,7 @@ export async function get(event: APIGatewayProxyEventV2, _context: Context) {
     if (err || !data) return error(`Could not fetch item. ${err}`);
     Item = data.Item;
   } else if (sessionId) {
-    const { err, data } = await GameData.queryBySecondaryIndex(
-      "sessionIndex",
-      "sessionId = :sessionId",
-      {
-        ":sessionId": sessionId,
-      }
-    );
+    const { err, data } = await getValidGameData(sessionId);
     if (err || !data) return error(`Could not query items. ${err}`);
     Item = data.Items[0];
   }
@@ -73,10 +73,27 @@ export async function create(event: APIGatewayProxyEventV2, _context: Context) {
   if (!SessionItem)
     return error(`No session found with id '${sessionId}'`, 404);
 
+  const date = dayjs();
+
+  // Game Data must not exist for current month
+  const prevGameData = await getValidGameData(sessionId, date);
+  if (prevGameData.err || !prevGameData.data)
+    return error(`Could not fetch item. ${prevGameData.err}`);
+  const GameDataItem = prevGameData.data.Items[0];
+
+  if (GameDataItem)
+    return error(
+      `Game data already exists for '${sessionId}' relevant for the current month`,
+      400
+    );
+
   const Item = {
     id: crypto.randomUUID(),
     sessionId: sessionId,
     money: 0,
+    validFrom: date.startOf("month").format(),
+    validTo: date.endOf("month").format(),
+    createdOn: date.format(),
   };
 
   const gameData = await GameData.putItem(Item);

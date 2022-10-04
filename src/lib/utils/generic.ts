@@ -1,5 +1,5 @@
 import Validator from "../../../../clicker-game-shared/utils/Validator.ts";
-import { APIGatewayProxyEventV2 } from "https://deno.land/x/lambda@1.25.2/mod.ts";
+import { APIGatewayProxyEventV2 } from "../../deps.ts";
 
 export function ok(body: unknown = { message: "success" }, statusCode = 200) {
   return {

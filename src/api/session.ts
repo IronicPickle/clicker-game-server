@@ -1,13 +1,9 @@
 import {
-  APIGatewayProxyEventV2,
-  Context,
-} from "https://deno.land/x/lambda@1.25.2/mod.ts";
-import {
   CreateSessionReq,
   GetSessionReq,
 } from "../../../clicker-game-shared/ts/api/session.ts";
 import sessionValidators from "../../../clicker-game-shared/validators/sessionValidators.ts";
-
+import { APIGatewayProxyEventV2, Context } from "../deps.ts";
 import DynoTable from "../lib/utils/DynoTable.ts";
 import {
   error,

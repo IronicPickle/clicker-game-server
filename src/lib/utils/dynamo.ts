@@ -1,7 +1,4 @@
-import {
-  createClient,
-  Doc,
-} from "https://denopkg.com/chiefbiiko/dynamodb@master/mod.ts";
+import { createClient } from "../../deps.ts";
 
 const host = Deno.env.get("DYNAMO_HOSTNAME");
 const port = Deno.env.get("DYNAMO_PORT");

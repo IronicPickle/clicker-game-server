@@ -1,4 +1,4 @@
-import { Doc } from "https://denopkg.com/chiefbiiko/dynamodb@master/util.ts";
+import { Doc } from "../../deps.ts";
 import { dyno } from "./dynamo.ts";
 
 export interface DynoRes {
@@ -51,16 +51,10 @@ export default class DynoTable {
     });
   }
 
-  public async queryBySecondaryIndex(
-    indexName: string,
-    expressions: string,
-    expressionValues: Record<string, string>
-  ) {
+  public async query(params: Doc) {
     return await exec("query", {
       TableName: this.tableName,
-      IndexName: indexName,
-      KeyConditionExpression: expressions,
-      ExpressionAttributeValues: expressionValues,
+      ...params,
     });
   }
 }
