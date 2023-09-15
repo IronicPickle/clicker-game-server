@@ -7,4 +7,4 @@ export type {
 
 export type { Doc } from "https://denopkg.com/chiefbiiko/dynamodb@master/mod.ts";
 export { createClient } from "https://denopkg.com/chiefbiiko/dynamodb@master/mod.ts";
-export { default as dayjs } from "https://cdn.skypack.dev/dayjs";
+export { default as dayjs } from "npm:dayjs@^1.11.7";

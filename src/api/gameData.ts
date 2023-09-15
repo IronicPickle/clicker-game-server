@@ -1,17 +1,22 @@
 import {
   CreateGameDataReq,
   GetGameDataReq,
+  UpdateGameDataReq,
 } from "../../../clicker-game-shared/ts/api/gameData.ts";
 import gameDataValidators from "../../../clicker-game-shared/validators/gameDataValidators.ts";
 import { APIGatewayProxyEventV2, Context, dayjs, Doc } from "../deps.ts";
 import DynoTable from "../lib/utils/DynoTable.ts";
 import {
   error,
+  notFoundError,
   ok,
   parseBody,
   parseQuery,
   parseValidators,
+  validationError,
 } from "../lib/utils/generic.ts";
+import { GetGameDataErrorCode } from "../../../clicker-game-shared/enums/api/gameData.ts";
+import { validateMoneyEarned } from "../lib/utils/gameData.ts";
 
 const GameData = new DynoTable("gameData");
 const Sessions = new DynoTable("sessions");
@@ -31,11 +36,11 @@ export async function get(event: APIGatewayProxyEventV2, _context: Context) {
   const params = parseQuery<GetGameDataReq>(event);
 
   const validators = gameDataValidators.get(params);
-  const errors = parseValidators(validators);
+  const validation = parseValidators(validators);
 
   const { id, sessionId } = params;
 
-  if (errors.failed) return error(errors);
+  if (validation.failed) return validationError(validation);
 
   let Item: Doc | undefined = undefined;
 
@@ -49,7 +54,14 @@ export async function get(event: APIGatewayProxyEventV2, _context: Context) {
     Item = data.Items[0];
   }
 
-  if (!Item) return error(`Not Found: ${id ?? sessionId}`, 404);
+  if (!Item) {
+    if (sessionId)
+      return notFoundError(
+        `Not Found: ${id ?? sessionId}`,
+        GetGameDataErrorCode.NoGameDataForSession
+      );
+    else return notFoundError(`Not Found: ${id ?? sessionId}`);
+  }
 
   return ok(Item);
 }
@@ -58,11 +70,11 @@ export async function create(event: APIGatewayProxyEventV2, _context: Context) {
   const body = parseBody<CreateGameDataReq>(event);
 
   const validators = gameDataValidators.create(body);
-  const errors = parseValidators(validators);
+  const validation = parseValidators(validators);
 
   const { sessionId } = body;
 
-  if (errors.failed || !sessionId) return error(errors);
+  if (validation.failed || !sessionId) return validationError(validation);
 
   // Session must exist to create game data
   const session = await Sessions.getItemById(sessionId);
@@ -71,7 +83,7 @@ export async function create(event: APIGatewayProxyEventV2, _context: Context) {
   const { Item: SessionItem } = session.data;
 
   if (!SessionItem)
-    return error(`No session found with id '${sessionId}'`, 404);
+    return notFoundError(`No session found with id '${sessionId}'`);
 
   const date = dayjs();
 
@@ -83,8 +95,7 @@ export async function create(event: APIGatewayProxyEventV2, _context: Context) {
 
   if (GameDataItem)
     return error(
-      `Game data already exists for '${sessionId}' relevant for the current month`,
-      400
+      `Game data already exists for '${sessionId}' relevant for the current month`
     );
 
   const Item = {
@@ -94,12 +105,46 @@ export async function create(event: APIGatewayProxyEventV2, _context: Context) {
     validFrom: date.startOf("month").format(),
     validTo: date.endOf("month").format(),
     createdOn: date.format(),
+    updateOn: date.format(),
   };
 
   const gameData = await GameData.putItem(Item);
   if (gameData.err) return error(`Could not put item. ${gameData.err}`);
 
   return ok(Item);
+}
+
+export async function update(event: APIGatewayProxyEventV2, _context: Context) {
+  const body = parseBody<UpdateGameDataReq>(event);
+
+  const validators = gameDataValidators.update(body);
+  const validation = parseValidators(validators);
+
+  const { id, activeMoneyEarned } = body;
+
+  if (validation.failed || !id || activeMoneyEarned == null)
+    return validationError(validation);
+
+  const date = dayjs();
+
+  const money = validateMoneyEarned(id, activeMoneyEarned);
+
+  const gameData = await GameData.updateItem({
+    Key: {
+      id,
+    },
+    UpdateExpression: "set money = :money",
+    ConditionExpression: "id = :id",
+    ExpressionAttributeValues: {
+      ":id": id,
+      ":money": money,
+      ":updatedOn": date.format(),
+    },
+    ReturnValues: "ALL_NEW",
+  });
+  if (gameData.err) return error(`Could not update item. ${gameData.err}`);
+
+  return ok(gameData);
 }
 
 export async function getAll(
@@ -110,7 +155,7 @@ export async function getAll(
   if (err || !data) return error(`Could not fetch items. ${err}`);
   const { Items } = data;
 
-  if (!Items) return error(`Not Found`, 404);
+  if (!Items) return notFoundError(`Not Found`);
 
   return ok(Items);
 }

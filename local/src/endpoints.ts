@@ -8,5 +8,6 @@ export default {
     get: 6010,
     create: 6011,
     getAll: 6012,
+    update: 6013,
   },
 } as Record<string, Record<string, number>>;

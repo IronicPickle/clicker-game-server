@@ -12,7 +12,6 @@ const exec = async (
   options?: Doc
 ): Promise<DynoRes> => {
   const func = dyno[funcName];
-
   try {
     return {
       data: await func(params, options),
@@ -53,6 +52,13 @@ export default class DynoTable {
 
   public async query(params: Doc) {
     return await exec("query", {
+      TableName: this.tableName,
+      ...params,
+    });
+  }
+
+  public async updateItem(params: Doc) {
+    return await exec("updateItem", {
       TableName: this.tableName,
       ...params,
     });
